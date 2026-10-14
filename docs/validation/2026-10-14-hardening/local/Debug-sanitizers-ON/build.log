@@ -1,9 +1,0 @@
-[1/9] Building CXX object CMakeFiles/sdb_core.dir/src/tracee.cpp.o
-[2/9] Linking CXX static library libsdb_core.a
-[3/9] Linking CXX executable inspection_test
-[4/9] Linking CXX executable sdb
-[5/9] Linking CXX executable task_control_test
-[6/9] Linking CXX executable tracee_memory_test
-[7/9] Linking CXX executable detach_test
-[8/9] Linking CXX executable elf_image_test_pie
-[9/9] Linking CXX executable elf_image_test_exec

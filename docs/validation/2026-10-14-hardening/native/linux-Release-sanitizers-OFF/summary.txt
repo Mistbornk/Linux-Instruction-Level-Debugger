@@ -1,2 +1,0 @@
-CTest suites: 11 total, 11 passed, 0 failed, 0 skipped.
-Nested scenario skips: 0 (not counted as executed feature coverage).
