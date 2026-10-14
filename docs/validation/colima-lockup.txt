@@ -1,0 +1,18 @@
+2026-10-13 Colima x86-64 QEMU guest, Linux6.8.0-50; second occurrence during Debug extensions.
+Exact triggering test still under investigation at capture.
+watchdog: BUG: soft lockup - CPU#3 stuck for 26s! [kworker/3:1:54]
+[  473.087054] watchdog: BUG: soft lockup - CPU#3 stuck for 52s! [kworker/3:1:54]
+[  475.857476] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+[  475.857771] rcu: 	2-...0: (6 ticks this GP) idle=022c/1/0x4000000000000000 softirq=55082/55083 fqs=11359
+[  475.857771] rcu: 	         hardirqs   softirqs   csw/system
+[  475.857771] rcu: 	 number:        0          0            0
+[  475.857771] rcu: 	cputime:        0          0            0   ==> 30010(ms)
+[  475.857771] rcu: 	(detected by 1, t=60011 jiffies, g=114005, q=9623 ncpus=4)
+[  501.087045] watchdog: BUG: soft lockup - CPU#3 stuck for 78s! [kworker/3:1:54]
+[  529.087745] watchdog: BUG: soft lockup - CPU#3 stuck for 104s! [kworker/3:1:54]
+[  556.939523] watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:1:56]
+[  557.087326] watchdog: BUG: soft lockup - CPU#3 stuck for 130s! [kworker/3:1:54]
+[  584.939091] watchdog: BUG: soft lockup - CPU#1 stuck for 48s! [kworker/1:1:56]
+[  585.087678] watchdog: BUG: soft lockup - CPU#3 stuck for 156s! [kworker/3:1:54]
+[  612.939237] watchdog: BUG: soft lockup - CPU#1 stuck for 74s! [kworker/1:1:56]
+[  613.087736] watchdog: BUG: soft lockup - CPU#3 stuck for 182s! [kworker/3:1:54]

@@ -1,0 +1,202 @@
+Start testing: Oct 14 06:58 UTC
+----------------------------------------------------------
+1/8 Testing: inspection
+1/8 Test: inspection
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/inspection_test"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"inspection" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+inspection: named registers, frame bounds/cycle, ABI decoding, escaped/bounded/unreadable paths passed
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"inspection" end time: Oct 14 06:58 UTC
+"inspection" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/8 Testing: task_control
+2/8 Test: task_control
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/task_control_test"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"task_control" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+PASS: clone task tracking, all-stop, scheduler locking, per-task registers/syscall pairs, attach/detach, nonleader exec, safe fork rejection
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"task_control" end time: Oct 14 06:58 UTC
+"task_control" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/8 Testing: detach
+3/8 Test: detach
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/detach_test"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"detach" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+PASS: detach restoration rollback, partial-detach state and cleanup
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"detach" end time: Oct 14 06:58 UTC
+"detach" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/8 Testing: tracee_memory
+4/8 Test: tracee_memory
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/tracee_memory_test"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"tracee_memory" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+PASS: tracee lifecycle, memory boundaries, breakpoint fault rollback, descriptor ownership
+<end of output>
+Test time =   0.28 sec
+----------------------------------------------------------
+Test Passed.
+"tracee_memory" end time: Oct 14 06:58 UTC
+"tracee_memory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/8 Testing: elf_image_pie
+5/8 Test: elf_image_pie
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/elf_image_test_pie"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"elf_image_pie" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+PIE: loader bias, AT_ENTRY, function/data addresses, annotations, symbol rejection, 20 malformed files, sectionless ELF passed
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"elf_image_pie" end time: Oct 14 06:58 UTC
+"elf_image_pie" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/8 Testing: elf_image_exec
+6/8 Test: elf_image_exec
+Command: "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/elf_image_test_exec"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"elf_image_exec" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+ET_EXEC: loader bias, AT_ENTRY, function/data addresses, annotations, symbol rejection, 20 malformed files, sectionless ELF passed
+<end of output>
+Test time =   0.22 sec
+----------------------------------------------------------
+Test Passed.
+"elf_image_exec" end time: Oct 14 06:58 UTC
+"elf_image_exec" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/8 Testing: integration
+7/8 Test: integration
+Command: "/usr/bin/python3.10" "/workspace/sdb/tests/integration.py" "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/sdb"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"integration" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+test_address_errors_are_recoverable (__main__.Integration) ... ok
+test_bad_commands_report_errors_and_continue (__main__.Integration) ... ok
+test_batch_file_and_stdin (__main__.Integration) ... ok
+test_breakpoint_and_disassembly_file_descriptors_do_not_grow (__main__.Integration) ... ok
+test_breakrva_uses_mapped_image_base (__main__.Integration) ... ok
+test_cli_usage_errors (__main__.Integration) ... ok
+test_disassembly_at_executable_mapping_boundary (__main__.Integration) ... ok
+test_duplicate_breakpoint_is_not_registered_twice (__main__.Integration) ... ok
+test_eof_reaps_stopped_child (__main__.Integration) ... ok
+test_exec_clears_old_breakpoints (__main__.Integration) ... ok
+test_exit_during_breakpoint_step (__main__.Integration) ... ok
+test_external_sigkill_is_reaped_before_next_command (__main__.Integration) ... ok
+test_fatal_signals_are_not_syscalls (__main__.Integration) ... ok
+test_invalid_launch_rollback_then_valid_load (__main__.Integration) ... ok
+test_invalid_patch_does_not_change_breakpoint_byte (__main__.Integration) ... ok
+test_launch_continue_and_registers (__main__.Integration) ... ok
+test_malformed_elf_metadata_is_rejected (__main__.Integration) ... ok
+test_noncode_and_unknown_symbols_are_rejected (__main__.Integration) ... ok
+test_patch_preserves_breakpoint_and_restores_new_byte (__main__.Integration) ... ok
+test_pie_relocation_repeated_launch (__main__.Integration) ... ok
+test_program_arguments (__main__.Integration) ... ok
+test_quoted_load_arguments_and_parser_recovery (__main__.Integration) ... ok
+test_repeated_breakpoint_add_delete (__main__.Integration) ... ok
+test_signal_during_breakpoint_step_over (__main__.Integration) ... ok
+test_signal_forwarding_and_suppression (__main__.Integration) ... ok
+test_single_step_through_exit_and_reload (__main__.Integration) ... ok
+test_step_original_instruction_once (__main__.Integration) ... ok
+test_stripped_symbol_error_keeps_debugger_usable (__main__.Integration) ... ok
+test_symbol_breakpoints_pie_and_nonpie (__main__.Integration) ... ok
+test_syscall_entry_exit (__main__.Integration) ... ok
+test_syscall_instruction_at_breakpoint (__main__.Integration) ... ok
+test_ten_breakpoint_hits_at_exact_rip (__main__.Integration) ... ok
+test_two_breakpoints_delete_and_no_stale_ids (__main__.Integration) ... ok
+test_zero_original_byte (__main__.Integration) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 10.201s
+
+OK
+<end of output>
+Test time =  13.84 sec
+----------------------------------------------------------
+Test Passed.
+"integration" end time: Oct 14 06:58 UTC
+"integration" time elapsed: 00:00:13
+----------------------------------------------------------
+
+8/8 Testing: extensions
+8/8 Test: extensions
+Command: "/usr/bin/python3.10" "/workspace/sdb/tests/extensions.py" "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/sdb"
+Directory: /tmp/sdb-ci-20261014/Release-sanitizers-OFF
+"extensions" start time: Oct 14 06:58 UTC
+Output:
+----------------------------------------------------------
+COVERAGE: native TF/watchpoint execution unavailable on QEMU TCG; explicit guard/recovery tests apply
+test_access_watchpoint_observes_reads_and_writes (__main__.Extensions) ... ok
+test_attach_detach_restores_code_and_hardware_registers (__main__.Extensions) ... ok
+test_attach_existing_thread_group_and_eof_detach (__main__.Extensions) ... ok
+test_backtrace_nested_frames_and_corrupt_chain (__main__.Extensions) ... ok
+test_continue_from_blocking_syscall_breakpoint_runs_waking_peer (__main__.Extensions) ... ok
+test_history_and_optional_automatic_disassembly (__main__.Extensions) ... ok
+test_invalid_attach_recovers_without_loaded_program (__main__.Extensions) ... ok
+test_memory_bounds_and_executable_write_rejection (__main__.Extensions) ... ok
+test_memory_read_write_pie_and_nonpie (__main__.Extensions) ... ok
+test_named_register_read_write_and_value_validation (__main__.Extensions) ... ok
+test_restart_clears_old_addresses_and_relocates_symbols (__main__.Extensions) ... ok
+test_syscall_names_arguments_and_bad_pointer_are_bounded (__main__.Extensions) ... ok
+test_tcg_guard_checks_peer_flags_before_resuming_any_task (__main__.Extensions) ... ok
+test_tcg_guard_preserves_software_breakpoint_and_allows_recovery (__main__.Extensions) ... ok
+test_tcg_guard_rejects_direct_single_step_with_watchpoint (__main__.Extensions) ... ok
+test_tcg_guard_rejects_manual_trap_flag_on_continue (__main__.Extensions) ... ok
+test_threads_shared_breakpoints_all_stop_and_signals (__main__.Extensions) ... ok
+test_unsupported_fork_restores_parent_and_child_before_detach (__main__.Extensions) ... ok
+test_watchpoint_during_software_breakpoint_step_over (__main__.Extensions) ... skipped 'native TF/watchpoint execution unavailable on QEMU TCG; guard/recovery tested separately'
+test_watchpoint_each_hardware_length (__main__.Extensions) ... ok
+test_watchpoint_is_installed_for_new_threads (__main__.Extensions) ... ok
+test_watchpoint_slots_alignment_mode_and_delete (__main__.Extensions) ... ok
+test_write_watchpoint_reports_real_post_instruction_rip (__main__.Extensions) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 7.941s
+
+OK (skipped=1)
+<end of output>
+Test time =   8.67 sec
+----------------------------------------------------------
+Test Passed.
+"extensions" end time: Oct 14 06:59 UTC
+"extensions" time elapsed: 00:00:08
+----------------------------------------------------------
+
+End testing: Oct 14 06:59 UTC
+
+integration =  22.51 sec*proc
+
+unit =   1.21 sec*proc
+

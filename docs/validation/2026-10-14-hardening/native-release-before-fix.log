@@ -1,0 +1,59 @@
+Internal ctest changing into directory: /home/runner/work/SDB/SDB/build/ci/Release-sanitizers-OFF
+Test project /home/runner/work/SDB/SDB/build/ci/Release-sanitizers-OFF
+      Start  1: inspection
+ 1/11 Test  #1: inspection .......................   Passed    0.01 sec
+      Start  2: task_control
+ 2/11 Test  #2: task_control .....................   Passed    0.18 sec
+      Start  3: detach
+ 3/11 Test  #3: detach ...........................   Passed    0.02 sec
+      Start  4: tracee_memory
+ 4/11 Test  #4: tracee_memory ....................   Passed    0.02 sec
+      Start  5: elf_image_pie
+ 5/11 Test  #5: elf_image_pie ....................   Passed    0.01 sec
+      Start  6: elf_image_exec
+ 6/11 Test  #6: elf_image_exec ...................   Passed    0.01 sec
+      Start  7: integration
+ 7/11 Test  #7: integration ......................   Passed    1.40 sec
+      Start  8: extensions
+ 8/11 Test  #8: extensions .......................   Passed    2.64 sec
+      Start  9: elf_process
+ 9/11 Test  #9: elf_process ......................   Passed    0.79 sec
+      Start 10: signals
+10/11 Test #10: signals ..........................***Failed   30.61 sec
+test_batch_sigint_exits_130_and_discards_remaining_commands (__main__.ControlSignals.test_batch_sigint_exits_130_and_discards_remaining_commands) ... ok
+test_other_terminal_sigint_is_reported_and_forwarded_to_attached_target (__main__.ControlSignals.test_other_terminal_sigint_is_reported_and_forwarded_to_attached_target) ... ok
+test_sigterm_reaps_owned_running_target (__main__.ControlSignals.test_sigterm_reaps_owned_running_target) ... ok
+test_term_and_hup_restore_attached_target_at_prompt_and_while_running (__main__.ControlSignals.test_term_and_hup_restore_attached_target_at_prompt_and_while_running) ... ok
+test_terminal_ctrl_c_discards_partial_command (__main__.ControlSignals.test_terminal_ctrl_c_discards_partial_command) ... ok
+test_terminal_ctrl_c_during_blocked_syscall_keeps_delayed_sigint_suppressed (__main__.ControlSignals.test_terminal_ctrl_c_during_blocked_syscall_keeps_delayed_sigint_suppressed) ... ok
+test_terminal_ctrl_c_stops_all_threads_and_allows_continue (__main__.ControlSignals.test_terminal_ctrl_c_stops_all_threads_and_allows_continue) ... FAIL
+
+======================================================================
+FAIL: test_terminal_ctrl_c_stops_all_threads_and_allows_continue (__main__.ControlSignals.test_terminal_ctrl_c_stops_all_threads_and_allows_continue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/runner/work/SDB/SDB/tests/signals.py", line 233, in test_terminal_ctrl_c_stops_all_threads_and_allows_continue
+    wait_for(lambda: task_state(child) not in ("t", "T"), "terminal target to resume")
+  File "/home/runner/work/SDB/SDB/tests/signals.py", line 26, in wait_for
+    raise AssertionError("timed out: " + description)
+AssertionError: timed out: terminal target to resume
+
+----------------------------------------------------------------------
+Ran 7 tests in 30.514s
+
+FAILED (failures=1)
+
+      Start 11: interview_demo
+11/11 Test #11: interview_demo ...................   Passed    0.10 sec
+
+91% tests passed, 1 tests failed out of 11
+
+Label Time Summary:
+integration    =  35.53 sec*proc (5 tests)
+unit           =   0.21 sec*proc (3 tests)
+
+Total Test time (real) =  35.84 sec
+
+The following tests FAILED:
+	 10 - signals (Failed)                                  integration
+Errors while running CTest

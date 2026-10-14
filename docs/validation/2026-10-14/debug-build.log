@@ -1,0 +1,22 @@
+[1/22] Building CXX object CMakeFiles/sdb_core.dir/src/memory.cpp.o
+[2/22] Building CXX object CMakeFiles/sdb_core.dir/src/tracee.cpp.o
+[3/22] Building CXX object CMakeFiles/sdb_core.dir/src/breakpoint.cpp.o
+[4/22] Building CXX object CMakeFiles/sdb_core.dir/src/watchpoint.cpp.o
+[5/22] Building CXX object CMakeFiles/sdb_core.dir/src/register_file.cpp.o
+[6/22] Building CXX object CMakeFiles/sdb_core.dir/src/backtrace.cpp.o
+[7/22] Building CXX object CMakeFiles/sdb_core.dir/src/syscall_decoder.cpp.o
+[8/22] Building CXX object CMakeFiles/sdb_core.dir/src/disassembler.cpp.o
+[9/22] Building CXX object CMakeFiles/sdb.dir/src/main.cpp.o
+[10/22] Building CXX object CMakeFiles/sdb_core.dir/src/debugger.cpp.o
+[11/22] Linking CXX static library libsdb_core.a
+[12/22] Linking CXX executable sdb
+[13/22] Building CXX object CMakeFiles/inspection_test.dir/tests/inspection_test.cpp.o
+[14/22] Linking CXX executable inspection_test
+[15/22] Building CXX object CMakeFiles/task_control_test.dir/tests/task_control_test.cpp.o
+[16/22] Linking CXX executable task_control_test
+[17/22] Building CXX object CMakeFiles/detach_test.dir/tests/detach_test.cpp.o
+[18/22] Linking CXX executable detach_test
+[19/22] Linking CXX executable elf_image_test_pie
+[20/22] Linking CXX executable elf_image_test_exec
+[21/22] Building CXX object CMakeFiles/tracee_memory_test.dir/tests/tracee_memory_test.cpp.o
+[22/22] Linking CXX executable tracee_memory_test

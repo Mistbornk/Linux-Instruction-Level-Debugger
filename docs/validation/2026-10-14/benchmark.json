@@ -1,0 +1,75 @@
+{
+  "platform": "Linux-6.8.0-50-generic-x86_64-with-glibc2.35",
+  "machine": "x86_64",
+  "compiler": "gcc (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0",
+  "sdb_binary": "/tmp/sdb-ci-20261014/Release-sanitizers-OFF/sdb",
+  "sdb_sha256": "914ed86c97b04982f31e0546cf8e805aedf4fd37faf0b6b598c04751b8b707ee",
+  "fixture_sha256": "463069644c937db68e7286f803ba32606a28cf41ba81565b935fab267333ecf6",
+  "logical_cpus": 4,
+  "syscalls": 200,
+  "syscall_stops": 400,
+  "repeats": 7,
+  "measurements": {
+    "native": {
+      "samples_ms": [
+        1.976062,
+        1.700053,
+        1.299041,
+        1.654051,
+        1.484047,
+        1.250039,
+        1.236038
+      ],
+      "median_ms": 1.484047,
+      "min_ms": 1.236038,
+      "max_ms": 1.976062
+    },
+    "continue": {
+      "samples_ms": [
+        27.18385,
+        25.737804,
+        25.582799,
+        25.446795,
+        27.218852,
+        25.813807,
+        27.322854
+      ],
+      "median_ms": 25.813807,
+      "min_ms": 25.446795,
+      "max_ms": 27.322854
+    },
+    "syscalls_no_disassembly": {
+      "samples_ms": [
+        87.316728,
+        83.457609,
+        85.72868,
+        87.029721,
+        85.386671,
+        86.061691,
+        87.354732
+      ],
+      "median_ms": 86.061691,
+      "min_ms": 83.457609,
+      "max_ms": 87.354732
+    },
+    "syscalls_with_disassembly": {
+      "samples_ms": [
+        269.416419,
+        266.291323,
+        261.863187,
+        258.885094,
+        265.128292,
+        258.570087,
+        261.288174
+      ],
+      "median_ms": 261.863187,
+      "min_ms": 258.570087,
+      "max_ms": 269.416419
+    }
+  },
+  "derived": {
+    "syscall_stop_overhead_us": 150.61971,
+    "automatic_disassembly_overhead_per_stop_us": 439.50373999999994
+  },
+  "scope": "Wall-clock subprocess session; stdout=/dev/null; no artificial speedup claim. Includes scheduling and VM overhead."
+}

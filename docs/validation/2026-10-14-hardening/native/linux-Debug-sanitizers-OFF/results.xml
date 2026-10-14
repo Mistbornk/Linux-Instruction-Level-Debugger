@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Linux-c++"
+	tests="11"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="runnervmmprz5"
+	time="5"
+	timestamp="2026-10-14T08:38:06"
+	>
+	<testcase name="inspection" classname="inspection" time="0.0112691" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>inspection: named registers, frame bounds/cycle, ABI decoding, escaped/bounded/unreadable paths passed
+</system-out>
+	</testcase>
+	<testcase name="task_control" classname="task_control" time="0.185018" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS: clone task tracking, all-stop, scheduler locking, per-task registers/syscall pairs, attach/detach, nonleader exec, safe fork rejection, signal restoration
+</system-out>
+	</testcase>
+	<testcase name="detach" classname="detach" time="0.0583105" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS: detach preflight/first-call rollback, partial-detach state and cleanup
+</system-out>
+	</testcase>
+	<testcase name="tracee_memory" classname="tracee_memory" time="0.0286801" status="run">
+		<properties/>
+		<system-out>PASS: tracee lifecycle, memory boundaries, breakpoint fault rollback, descriptor ownership
+</system-out>
+	</testcase>
+	<testcase name="elf_image_pie" classname="elf_image_pie" time="0.0983597" status="run">
+		<properties/>
+		<system-out>PIE: file/procfs identity, loader bias, AT_ENTRY, function/data addresses, annotations, symbol rejection, 20 malformed files, sectionless ELF passed
+</system-out>
+	</testcase>
+	<testcase name="elf_image_exec" classname="elf_image_exec" time="0.0937125" status="run">
+		<properties/>
+		<system-out>ET_EXEC: file/procfs identity, loader bias, AT_ENTRY, function/data addresses, annotations, symbol rejection, 20 malformed files, sectionless ELF passed
+</system-out>
+	</testcase>
+	<testcase name="integration" classname="integration" time="1.45652" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration"/>
+		</properties>
+		<system-out>test_address_errors_are_recoverable (__main__.Integration.test_address_errors_are_recoverable) ... ok
+test_bad_commands_report_errors_and_continue (__main__.Integration.test_bad_commands_report_errors_and_continue) ... ok
+test_batch_file_and_stdin (__main__.Integration.test_batch_file_and_stdin) ... ok
+test_breakpoint_and_disassembly_file_descriptors_do_not_grow (__main__.Integration.test_breakpoint_and_disassembly_file_descriptors_do_not_grow) ... ok
+test_breakrva_uses_mapped_image_base (__main__.Integration.test_breakrva_uses_mapped_image_base) ... ok
+test_cli_usage_errors (__main__.Integration.test_cli_usage_errors) ... ok
+test_disassembly_at_executable_mapping_boundary (__main__.Integration.test_disassembly_at_executable_mapping_boundary) ... ok
+test_duplicate_breakpoint_is_not_registered_twice (__main__.Integration.test_duplicate_breakpoint_is_not_registered_twice) ... ok
+test_eof_reaps_stopped_child (__main__.Integration.test_eof_reaps_stopped_child) ... ok
+test_exec_clears_old_breakpoints (__main__.Int...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="extensions" classname="extensions" time="2.38141" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration"/>
+		</properties>
+		<system-out>COVERAGE: native TF/watchpoint execution enabled
+test_access_watchpoint_observes_reads_and_writes (__main__.Extensions.test_access_watchpoint_observes_reads_and_writes) ... ok
+test_attach_detach_restores_code_and_hardware_registers (__main__.Extensions.test_attach_detach_restores_code_and_hardware_registers) ... ok
+test_attach_existing_thread_group_and_eof_detach (__main__.Extensions.test_attach_existing_thread_group_and_eof_detach) ... ok
+test_backtrace_nested_frames_and_corrupt_chain (__main__.Extensions.test_backtrace_nested_frames_and_corrupt_chain) ... ok
+test_continue_from_blocking_syscall_breakpoint_runs_waking_peer (__main__.Extensions.test_continue_from_blocking_syscall_breakpoint_runs_waking_peer) ... ok
+test_history_and_optional_automatic_disassembly (__main__.Extensions.test_history_and_optional_automatic_disassembly) ... ok
+test_invalid_attach_recovers_without_loaded_program (__main__.Extensions.test_invalid_attach_recovers_without_loaded_program) ... ok
+test_memory_bounds_and_executable_write_re...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="elf_process" classname="elf_process" time="0.798138" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration"/>
+		</properties>
+		<system-out>test_attach_memfd_executable (__main__.ExecutableIdentity.test_attach_memfd_executable) ... ok
+test_attach_replaced_executable (__main__.ExecutableIdentity.test_attach_replaced_executable) ... ok
+test_attach_unlinked_executable (__main__.ExecutableIdentity.test_attach_unlinked_executable) ... ok
+test_exec_memfd_reloads_symbols_and_clears_breakpoints (__main__.ExecutableIdentity.test_exec_memfd_reloads_symbols_and_clears_breakpoints) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.728s
+
+OK
+</system-out>
+	</testcase>
+	<testcase name="signals" classname="signals" time="0.6878" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration"/>
+		</properties>
+		<system-out>test_batch_sigint_exits_130_and_discards_remaining_commands (__main__.ControlSignals.test_batch_sigint_exits_130_and_discards_remaining_commands) ... ok
+test_other_terminal_sigint_is_reported_and_forwarded_to_attached_target (__main__.ControlSignals.test_other_terminal_sigint_is_reported_and_forwarded_to_attached_target) ... ok
+test_sigterm_reaps_owned_running_target (__main__.ControlSignals.test_sigterm_reaps_owned_running_target) ... ok
+test_term_and_hup_restore_attached_target_at_prompt_and_while_running (__main__.ControlSignals.test_term_and_hup_restore_attached_target_at_prompt_and_while_running) ... ok
+test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue (__main__.ControlSignals.test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue) ... ok
+test_terminal_ctrl_c_discards_partial_command (__main__.ControlSignals.test_terminal_ctrl_c_discards_partial_command) ... ok
+test_terminal_ctrl_c_during_blocked_syscall_keeps_delayed_sigint_suppressed (__main__.ControlSignals.test_...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="interview_demo" classname="interview_demo" time="0.118729" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration"/>
+		</properties>
+		<system-out>PASS: wrong-pointer write located by hardware watchpoint/backtrace; memory verified and corrected run exited normally
+</system-out>
+	</testcase>
+</testsuite>

@@ -1,0 +1,31 @@
+** program '/tmp/sdb-target' loaded. entry point: 0x62ebb822a0e0.
+** tracee pid 2760, load bias 0x62ebb8229000.
+=> 0x62ebb822a0e0: f3 0f 1e fa                                   endbr64 
+   0x62ebb822a0e4: 31 ed                                         xor     ebp, ebp
+   0x62ebb822a0e6: 49 89 d1                                      mov     r9, rdx
+   0x62ebb822a0e9: 5e                                            pop     rsi
+   0x62ebb822a0ea: 48 89 e2                                      mov     rdx, rsp
+** set a breakpoint at 0x62ebb822a21f. id 0.
+** hit a breakpoint at 0x62ebb822a21f.
+=> 0x62ebb822a21f: f3 0f 1e fa                                   endbr64 
+   0x62ebb822a223: 55                                            push    rbp
+   0x62ebb822a224: 48 89 e5                                      mov     rbp, rsp
+   0x62ebb822a227: 48 83 ec 20                                   sub     rsp, 0x20
+   0x62ebb822a22b: 89 7d ec                                      mov     dword ptr [rbp - 0x14], edi
+$rax 0x000062ebb822a21f    $rbx 0x0000000000000000    $rcx 0x000062ebb822cda0
+$rdx 0x00007ffd409afd48    $rsi 0x00007ffd409afd38    $rdi 0x0000000000000001
+$rbp 0x0000000000000001    $rsp 0x00007ffd409afc28    $r8 0x00007a9424680f10
+$r9 0x00007a942469a040    $r10 0x00007a9424694908    $r11 0x00007a94246af660
+$r12 0x00007ffd409afd38    $r13 0x000062ebb822a21f    $r14 0x000062ebb822cda0
+$r15 0x00007a94246ce040    $rip 0x000062ebb822a21f    $eflags 0x0000000000000246
+$orig_rax 0xffffffffffffffff    $fs_base 0x00007a9424462740    $gs_base 0x0000000000000000
+$cs 0x0000000000000033    $ss 0x000000000000002b    $ds 0x0000000000000000
+$es 0x0000000000000000    $fs 0x0000000000000000    $gs 0x0000000000000000
+** single-step stop.
+=> 0x62ebb822a223: 55                                            push    rbp
+   0x62ebb822a224: 48 89 e5                                      mov     rbp, rsp
+   0x62ebb822a227: 48 83 ec 20                                   sub     rsp, 0x20
+   0x62ebb822a22b: 89 7d ec                                      mov     dword ptr [rbp - 0x14], edi
+   0x62ebb822a22e: 48 89 75 e0                                   mov     qword ptr [rbp - 0x20], rsi
+VISITS=10
+** exited with status 0.

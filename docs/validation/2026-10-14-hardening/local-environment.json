@@ -1,0 +1,26 @@
+{
+  "platform": "Linux-6.8.0-50-generic-x86_64-with-glibc2.35",
+  "machine": "x86_64",
+  "logical_cpus": 4,
+  "compiler": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0",
+  "cmake": "cmake version 3.22.1",
+  "capstone": "libcapstone-dev:amd64\t4.0.2-5",
+  "binaries": {
+    "make": {
+      "path": "sdb",
+      "sha256": "068ae01095bdd31f9cbbee8fa5f56654f7f104f36b96ef4dbc62caf11d8a6523"
+    },
+    "Debug-sanitizers-OFF": {
+      "path": "/tmp/sdb-hardening/Debug-sanitizers-OFF/sdb",
+      "sha256": "e28c5a65f8a7b4f24bc3cdc4d9d2df1fae66aba2dd9986c07b5dff00bd70a5b5"
+    },
+    "Release-sanitizers-OFF": {
+      "path": "/tmp/sdb-hardening/Release-sanitizers-OFF/sdb",
+      "sha256": "4fbbc18eaa71719548a761b6caff4ecf53ef0e9325182c27d048538ff3465f9d"
+    },
+    "Debug-sanitizers-ON": {
+      "path": "/tmp/sdb-hardening/Debug-sanitizers-ON/sdb",
+      "sha256": "0c49b7d5b872681e45f90b1cc61df697492184dbe37a75015b364d500ab03dac"
+    }
+  }
+}

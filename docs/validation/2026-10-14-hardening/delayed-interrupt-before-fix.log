@@ -1,0 +1,14 @@
+test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue (__main__.ControlSignals) ... FAIL
+
+======================================================================
+FAIL: test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue (__main__.ControlSignals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/sdb/tests/signals.py", line 279, in test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue
+    self.assertIn("exited with status 0", result)
+AssertionError: 'exited with status 0' not found in 'cont\n** interrupted; all threads stopped.\n(sdb) '
+
+----------------------------------------------------------------------
+Ran 1 test in 1.890s
+
+FAILED (failures=1)

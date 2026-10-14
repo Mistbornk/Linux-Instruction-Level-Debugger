@@ -1,0 +1,29 @@
+COVERAGE: native TF/watchpoint execution unavailable on QEMU TCG; explicit guard/recovery tests apply
+test_access_watchpoint_observes_reads_and_writes (__main__.Extensions) ... ok
+test_attach_detach_restores_code_and_hardware_registers (__main__.Extensions) ... ok
+test_attach_existing_thread_group_and_eof_detach (__main__.Extensions) ... ok
+test_backtrace_nested_frames_and_corrupt_chain (__main__.Extensions) ... ok
+test_continue_from_blocking_syscall_breakpoint_runs_waking_peer (__main__.Extensions) ... ok
+test_history_and_optional_automatic_disassembly (__main__.Extensions) ... ok
+test_invalid_attach_recovers_without_loaded_program (__main__.Extensions) ... ok
+test_memory_bounds_and_executable_write_rejection (__main__.Extensions) ... ok
+test_memory_read_write_pie_and_nonpie (__main__.Extensions) ... ok
+test_named_register_read_write_and_value_validation (__main__.Extensions) ... ok
+test_restart_clears_old_addresses_and_relocates_symbols (__main__.Extensions) ... ok
+test_syscall_names_arguments_and_bad_pointer_are_bounded (__main__.Extensions) ... ok
+test_tcg_guard_checks_peer_flags_before_resuming_any_task (__main__.Extensions) ... ok
+test_tcg_guard_preserves_software_breakpoint_and_allows_recovery (__main__.Extensions) ... ok
+test_tcg_guard_rejects_direct_single_step_with_watchpoint (__main__.Extensions) ... ok
+test_tcg_guard_rejects_manual_trap_flag_on_continue (__main__.Extensions) ... ok
+test_threads_shared_breakpoints_all_stop_and_signals (__main__.Extensions) ... ok
+test_unsupported_fork_restores_parent_and_child_before_detach (__main__.Extensions) ... ok
+test_watchpoint_during_software_breakpoint_step_over (__main__.Extensions) ... skipped 'native TF/watchpoint execution unavailable on QEMU TCG; guard/recovery tested separately'
+test_watchpoint_each_hardware_length (__main__.Extensions) ... ok
+test_watchpoint_is_installed_for_new_threads (__main__.Extensions) ... ok
+test_watchpoint_slots_alignment_mode_and_delete (__main__.Extensions) ... ok
+test_write_watchpoint_reports_real_post_instruction_rip (__main__.Extensions) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 12.337s
+
+OK (skipped=1)
