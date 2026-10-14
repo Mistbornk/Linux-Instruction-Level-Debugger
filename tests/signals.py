@@ -252,6 +252,57 @@ class ControlSignals(unittest.TestCase):
             self.assertIn("load <program>", terminal.command("help"))
             self.assertNotIn("** error:", terminal.finish())
 
+    def test_terminal_ctrl_c_during_blocked_syscall_keeps_delayed_sigint_suppressed(self):
+        with Terminal([SDB, str(self.target), "blocked-read"]) as terminal:
+            terminal.command("set disassemble off")
+            terminal.command("break signal_read_call")
+            self.assertIn("hit a breakpoint", terminal.command("cont"))
+            child = int(re.search(r"SIGNAL_READY=(\d+)", terminal.text).group(1))
+            self.assertIn("syscall entry 0", terminal.command("syscall"))
+            terminal.command("delete 0")
+
+            def blocked_read():
+                return (task_state(child) == "S" and
+                        Path("/proc/{}/syscall".format(child)).read_text().split()[0] == "0")
+
+            # The next PTRACE_SYSCALL is genuinely waiting inside a read on an
+            # empty private pipe, rather than stopped at its entry boundary.
+            terminal.send("syscall\n")
+            wait_for(blocked_read, "fixture to block inside read under PTRACE_SYSCALL")
+            before = len(terminal.text)
+            prompts = terminal.text.count("(sdb) ")
+            terminal.send("\x03")
+            terminal.wait(lambda text: text.count("(sdb) ") > prompts)
+            interrupted = terminal.text[before:]
+            self.assertIn("interrupted; all threads stopped", interrupted)
+            self.assertIn("syscall exit 0", interrupted)
+            self.assertNotIn("stopped by signal SIGINT", interrupted)
+
+            # A delayed terminal SIGINT can be observed only on the next resume.
+            # It may produce another debugger interrupt, but must not become an
+            # application signal even though the intervening stop was a syscall.
+            for _ in range(8):
+                before = len(terminal.text)
+                prompts = terminal.text.count("(sdb) ")
+                terminal.send("cont\n")
+                terminal.wait(lambda text: text.count("(sdb) ") > prompts or blocked_read())
+                self.assertNotIn("stopped by signal SIGINT", terminal.text[before:])
+                if blocked_read():
+                    break
+            else:
+                self.fail("read did not resume after Ctrl-C:\n" + terminal.text)
+            # An unrelated user signal remains forwardable. Its handler writes
+            # the pipe token, allowing the restarted read to finish normally.
+            prompts = terminal.text.count("(sdb) ")
+            os.kill(child, signal.SIGUSR1)
+            terminal.wait(lambda text: text.count("(sdb) ") > prompts)
+            self.assertIn("stopped by signal SIGUSR1", terminal.text)
+            self.assertIn("exited with status 0", terminal.command("cont"))
+            text = terminal.finish()
+            self.assertIn("SIGNAL_DONE=42 INTERRUPTS=0", text)
+            self.assertNotIn("** error:", text)
+            self.assertFalse(Path("/proc/{}".format(child)).exists())
+
     def test_other_terminal_sigint_is_reported_and_forwarded_to_attached_target(self):
         with Terminal([str(self.target)], ready=lambda text: "SIGNAL_READY=" in text) as target:
             with Live([SDB]) as debugger:

@@ -37,7 +37,7 @@ build/make/inspection_test: tests/inspection_test.cpp build/make/tracee.o build/
 	chmod +x $@
 
 build/make/task_control_test: tests/task_control_test.cpp build/make/tracee.o build/make/signal_monitor.o build/make/memory.o
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ -pthread -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -Wl,--wrap=send $^ -pthread -o $@
 	chmod +x $@
 
 build/make/detach_test: tests/detach_test.cpp $(filter-out build/make/main.o,$(OBJECTS))

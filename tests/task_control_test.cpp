@@ -21,6 +21,7 @@
 #include <string>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
@@ -34,6 +35,10 @@ std::atomic<unsigned int> finish{0};
 struct Report {
     std::uint64_t finish_address;
 };
+
+int failed_gate_socket = -1;
+sdb::Tracee* failed_gate_tracee = nullptr;
+pid_t failed_gate_child = -1;
 
 void check(bool value, const char* message) {
     if (!value)
@@ -155,6 +160,60 @@ void run_to_exit(sdb::Tracee& tracee) {
             tracee.set_pending_signal(0);
     }
     throw std::runtime_error("too many fixture stops");
+}
+
+void broken_launch_gate_is_recoverable() {
+    sigset_t original_mask;
+    struct sigaction original_action{};
+    check(::sigprocmask(SIG_SETMASK, nullptr, &original_mask) == 0 &&
+              ::sigaction(SIGPIPE, nullptr, &original_action) == 0,
+          "read original SIGPIPE state failed");
+    int sockets[2];
+    check(::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sockets) == 0,
+          "create broken-gate injection socket failed");
+    check(::close(sockets[0]) == 0, "close injected gate peer failed");
+    const auto restore = [&] {
+        failed_gate_tracee = nullptr;
+        failed_gate_socket = -1;
+        ::close(sockets[1]);
+        check(::sigaction(SIGPIPE, &original_action, nullptr) == 0 &&
+                  ::sigprocmask(SIG_SETMASK, &original_mask, nullptr) == 0,
+              "restore original SIGPIPE state failed");
+    };
+    try {
+        auto mask = original_mask;
+        ::sigdelset(&mask, SIGPIPE);
+        struct sigaction action{};
+        action.sa_handler = SIG_DFL;
+        ::sigemptyset(&action.sa_mask);
+        check(::sigaction(SIGPIPE, &action, nullptr) == 0 &&
+                  ::sigprocmask(SIG_SETMASK, &mask, nullptr) == 0,
+              "enable default SIGPIPE action failed");
+        sdb::Tracee tracee;
+        failed_gate_socket = sockets[1];
+        failed_gate_tracee = &tracee;
+        failed_gate_child = -1;
+        bool rejected = false;
+        try {
+            tracee.launch({"/bin/true"});
+        } catch (const std::system_error& error) {
+            rejected = error.code().value() == EPIPE;
+        }
+        check(rejected && failed_gate_child > 0 && failed_gate_tracee == nullptr,
+              "broken launch gate did not report injected EPIPE");
+        check(tracee.pid() == -1 && tracee.state() == sdb::ProcessState::NoProgram,
+              "broken launch gate retained a process session");
+        int status = 0;
+        errno = 0;
+        check(::waitpid(failed_gate_child, &status, WNOHANG) == -1 && errno == ECHILD,
+              "broken launch gate did not reap its child");
+        tracee.launch({"/bin/true"});
+        run_to_exit(tracee);
+        restore();
+    } catch (...) {
+        restore();
+        throw;
+    }
 }
 
 int signal_state_fixture() {
@@ -569,6 +628,18 @@ void exec_first_instruction() {
 }
 } // namespace
 
+// Exercise the real EPIPE/SIGPIPE kernel boundary without racing a child exit.
+// Preserve the production flags so removing MSG_NOSIGNAL makes this test fail.
+extern "C" ssize_t __real_send(int fd, const void* buffer, size_t length, int flags);
+extern "C" ssize_t __wrap_send(int fd, const void* buffer, size_t length, int flags) {
+    if (failed_gate_tracee) {
+        failed_gate_child = failed_gate_tracee->pid();
+        failed_gate_tracee = nullptr;
+        return __real_send(failed_gate_socket, buffer, length, flags);
+    }
+    return __real_send(fd, buffer, length, flags);
+}
+
 int main(int argc, char** argv) {
     // Self-exec fixtures use _exit to avoid running LeakSanitizer's own ptrace
     // inspection from an already traced process. The parent test still runs
@@ -592,6 +663,7 @@ int main(int argc, char** argv) {
         if (!probe())
             return 77;
         exec_first_instruction();
+        broken_launch_gate_is_recoverable();
         monitored_signal_state();
         launched_tasks();
         attach_tasks();

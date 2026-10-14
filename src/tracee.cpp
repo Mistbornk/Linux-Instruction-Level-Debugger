@@ -17,6 +17,7 @@
 #include <poll.h>
 #include <stdexcept>
 #include <sys/ptrace.h>
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <system_error>
 #include <unistd.h>
@@ -244,8 +245,8 @@ TraceEvent Tracee::launch(const std::vector<std::string>& arguments) {
         fail("pipe2");
     FileDescriptor reader(error_fds[0]), writer(error_fds[1]);
     int gate_fds[2];
-    if (::pipe2(gate_fds, O_CLOEXEC) == -1)
-        fail("pipe2 launch gate");
+    if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, gate_fds) == -1)
+        fail("socketpair launch gate");
     FileDescriptor gate_reader(gate_fds[0]), gate_writer(gate_fds[1]);
     const pid_t child = ::fork();
     if (child == -1)
@@ -284,7 +285,9 @@ TraceEvent Tracee::launch(const std::vector<std::string>& arguments) {
         const char token = 'x';
         ssize_t count;
         do {
-            count = ::write(gate_writer.get(), &token, 1);
+            // A child can be exiting while SEIZE succeeds. Its closed gate
+            // must produce EPIPE for cleanup, not SIGPIPE killing the debugger.
+            count = ::send(gate_writer.get(), &token, 1, MSG_NOSIGNAL);
         } while (count == -1 && errno == EINTR);
         if (count != 1)
             fail("write launch gate", count == -1 ? errno : EIO);

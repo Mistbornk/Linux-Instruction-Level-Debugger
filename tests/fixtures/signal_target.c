@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <errno.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
@@ -6,12 +7,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 _Alignas(8) volatile uint64_t watched = 0;
 _Atomic int finish = 0;
 static volatile sig_atomic_t requested = 0;
 static volatile sig_atomic_t interrupts = 0;
+static volatile sig_atomic_t release_fd = -1;
 
 __attribute__((noinline)) void cleanup_site(void) {
     __asm__ volatile("nop" ::: "memory");
@@ -20,6 +23,11 @@ __attribute__((noinline)) void cleanup_site(void) {
 static void request_finish(int number) {
     (void)number;
     requested = 1;
+    if (release_fd >= 0) {
+        const char token = 'x';
+        if (write(release_fd, &token, 1) != 1)
+            _exit(7);
+    }
 }
 
 static void count_interrupt(int number) {
@@ -47,6 +55,29 @@ int main(int argc, char** argv) {
     action.sa_handler = count_interrupt;
     if (sigaction(SIGINT, &action, NULL) == -1)
         return 4;
+    if (argc == 2 && strcmp(argv[1], "blocked-read") == 0) {
+        int descriptors[2];
+        if (pipe(descriptors) == -1)
+            return 8;
+        release_fd = descriptors[1];
+        printf("SIGNAL_READY=%ld\n", (long)getpid());
+        char token = 0;
+        long result;
+        do {
+            result = SYS_read;
+            __asm__ volatile(".globl signal_read_call\nsignal_read_call:\nsyscall"
+                             : "+a"(result)
+                             : "D"(descriptors[0]), "S"(&token), "d"(1L)
+                             : "rcx", "r11", "memory");
+        } while (result == -EINTR);
+        if (result != 1 || token != 'x')
+            return 9;
+        release_fd = -1;
+        if (close(descriptors[0]) == -1 || close(descriptors[1]) == -1)
+            return 10;
+        printf("SIGNAL_DONE=42 INTERRUPTS=%d\n", interrupts);
+        return 0;
+    }
     const int threaded = argc == 2 && strcmp(argv[1], "threads") == 0;
     pthread_t threads[2];
     for (int i = 0; i < (threaded ? 2 : 0); ++i)
