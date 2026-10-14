@@ -20,6 +20,10 @@ __attribute__((noinline)) void cleanup_site(void) {
     __asm__ volatile("nop" ::: "memory");
 }
 
+__attribute__((noinline)) void before_unmask(void) {
+    __asm__ volatile("nop" ::: "memory");
+}
+
 static void request_finish(int number) {
     (void)number;
     requested = 1;
@@ -94,8 +98,11 @@ int main(int argc, char** argv) {
         usleep(1000);
     // The test leaves a terminal SIGINT pending while SDB handles its own copy,
     // then sets finish. Delivery is forced onto the subsequent debugger cont.
-    if (delayed_interrupt && sigprocmask(SIG_UNBLOCK, &interrupt_mask, NULL) == -1)
-        return 12;
+    if (delayed_interrupt) {
+        before_unmask();
+        if (sigprocmask(SIG_UNBLOCK, &interrupt_mask, NULL) == -1)
+            return 12;
+    }
     atomic_store_explicit(&finish, 1, memory_order_relaxed);
     for (int i = 0; i < (threaded ? 2 : 0); ++i)
         if (pthread_join(threads[i], NULL))

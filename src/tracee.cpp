@@ -753,7 +753,6 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
     }
     if (event.ptrace_event == PTRACE_EVENT_CLONE || event.ptrace_event == PTRACE_EVENT_FORK ||
         event.ptrace_event == PTRACE_EVENT_VFORK) {
-        current.terminal_interrupt = false;
         unsigned long child = 0;
         checked_ptrace(PTRACE_GETEVENTMSG, tid, nullptr, &child, "ptrace(GETEVENTMSG clone)");
         if (child == 0 || child > static_cast<unsigned long>(std::numeric_limits<pid_t>::max()))
@@ -761,6 +760,9 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
         event.new_tid = static_cast<pid_t>(child);
         tasks_.try_emplace(event.new_tid, Task{});
         if (event.ptrace_event == PTRACE_EVENT_CLONE && thread_group(event.new_tid) == pid_) {
+            // A process-pending terminal SIGINT may be delivered to a new
+            // thread after it unblocks the inherited signal mask.
+            tasks_.at(event.new_tid).terminal_interrupt |= current.terminal_interrupt;
             event.kind = EventKind::ThreadCreated;
         } else {
             unsupported_descendants_ = true;
@@ -771,7 +773,6 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
     if (event.ptrace_event == PTRACE_EVENT_STOP) {
         current.interrupt_sent = false;
         if (stopping_signal(event.signal)) {
-            current.terminal_interrupt = false;
             event.kind = EventKind::GroupStop;
             return event;
         }
@@ -780,7 +781,6 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
         return std::nullopt;
     }
     if (event.ptrace_event != 0) {
-        current.terminal_interrupt = false;
         event.kind = EventKind::PtraceEvent;
         return event;
     }
@@ -828,12 +828,22 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
         fail("ptrace(GETSIGINFO)");
     event.trap_code = info.si_code;
     observe_interrupt();
-    const bool terminal_interrupt = current.terminal_interrupt;
-    current.terminal_interrupt = false;
-    if (terminal_interrupt && event.signal == SIGINT && info.si_code == SI_KERNEL) {
+    bool terminal_interrupt = false;
+    if (event.signal == SIGINT) {
+        if (current.terminal_interrupt && info.si_code == SI_KERNEL) {
+            const pid_t group = ::getpgid(tid);
+            if (group == -1)
+                fail("getpgid terminal signal delivery");
+            terminal_interrupt = group == ::getpgrp();
+        }
+        current.terminal_interrupt = false;
+    }
+    // A masked SIGINT can remain pending across breakpoints, single steps,
+    // syscalls and clone stops. Only SIGINT delivery consumes its correlation;
+    // unrelated stops do not prove that the terminal copy has disappeared.
+    if (terminal_interrupt) {
         // Correlate a terminal copy with an observed debugger interrupt and
-        // shared foreground process group. Retain the token through synthetic
-        // INTERRUPT stops so a delayed delivery after acknowledgement works.
+        // process group still shared at delivery, even after acknowledgement.
         // An attached target in another terminal and kill/raise SIGINT remain
         // ordinary application signals.
         current.delivery_stop = false;

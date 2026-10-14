@@ -253,36 +253,45 @@ class ControlSignals(unittest.TestCase):
             self.assertNotIn("** error:", terminal.finish())
 
     def test_terminal_ctrl_c_delayed_by_target_mask_does_not_stop_next_continue(self):
-        with Terminal([SDB, str(self.target), "delayed-int"]) as terminal:
-            terminal.command("set disassemble off")
-            terminal.send("cont\n")
-            terminal.wait(lambda text: "SIGNAL_READY=" in text)
-            child = int(re.search(r"SIGNAL_READY=(\d+)", terminal.text).group(1))
-            prompts = terminal.text.count("(sdb) ")
-            terminal.send("\x03")
-            terminal.wait(lambda text: text.count("(sdb) ") > prompts)
-            self.assertIn("interrupted; all threads stopped", terminal.text)
+        for interrupting_before_unmask in (False, True):
+            with self.subTest(interrupting_before_unmask=interrupting_before_unmask):
+                with Terminal([SDB, str(self.target), "delayed-int"]) as terminal:
+                    terminal.command("set disassemble off")
+                    terminal.send("cont\n")
+                    terminal.wait(lambda text: "SIGNAL_READY=" in text)
+                    child = int(re.search(r"SIGNAL_READY=(\d+)", terminal.text).group(1))
+                    prompts = terminal.text.count("(sdb) ")
+                    terminal.send("\x03")
+                    terminal.wait(lambda text: text.count("(sdb) ") > prompts)
+                    self.assertIn("interrupted; all threads stopped", terminal.text)
 
-            def target_has_blocked_pending_interrupt():
-                status = Path("/proc/{}/status".format(child)).read_text()
-                values = {name: int(value, 16) for name, value in
-                          re.findall(r"(?m)^(SigBlk|SigPnd|ShdPnd):\s+([0-9a-fA-F]+)$", status)}
-                mask = 1 << (signal.SIGINT - 1)
-                return (values["SigBlk"] & mask and
-                        (values["SigPnd"] | values["ShdPnd"]) & mask)
+                    def target_has_blocked_pending_interrupt():
+                        status = Path("/proc/{}/status".format(child)).read_text()
+                        values = {name: int(value, 16) for name, value in
+                                  re.findall(r"(?m)^(SigBlk|SigPnd|ShdPnd):\s+([0-9a-fA-F]+)$", status)}
+                        mask = 1 << (signal.SIGINT - 1)
+                        return (values["SigBlk"] & mask and
+                                (values["SigPnd"] | values["ShdPnd"]) & mask)
 
-            wait_for(target_has_blocked_pending_interrupt, "terminal SIGINT pending behind target mask")
-            terminal.command("write @finish 01000000")
-            # Unblocking SIGINT after the CLI has acknowledged Ctrl-C must not
-            # introduce a second prompt or deliver the stale signal to target.
-            result = terminal.command("cont")
-            self.assertIn("exited with status 0", result)
-            self.assertNotIn("interrupted; all threads stopped", result)
-            self.assertNotIn("stopped by signal SIGINT", result)
-            text = terminal.finish()
-            self.assertIn("SIGNAL_DONE=42 INTERRUPTS=0", text)
-            self.assertNotIn("** error:", text)
-            self.assertFalse(Path("/proc/{}".format(child)).exists())
+                    wait_for(target_has_blocked_pending_interrupt,
+                             "terminal SIGINT pending behind target mask")
+                    terminal.command("write @finish 01000000")
+                    if interrupting_before_unmask:
+                        terminal.command("break before_unmask")
+                        self.assertIn("hit a breakpoint", terminal.command("cont"))
+                        self.assertIn("single-step stop", terminal.command("si"))
+                        terminal.command("delete 0")
+                        self.assertTrue(target_has_blocked_pending_interrupt())
+                    # A deferred terminal signal remains debugger-owned across
+                    # intervening breakpoint/single-step stops and CLI commands.
+                    result = terminal.command("cont")
+                    self.assertIn("exited with status 0", result)
+                    self.assertNotIn("interrupted; all threads stopped", result)
+                    self.assertNotIn("stopped by signal SIGINT", result)
+                    text = terminal.finish()
+                    self.assertIn("SIGNAL_DONE=42 INTERRUPTS=0", text)
+                    self.assertNotIn("** error:", text)
+                    self.assertFalse(Path("/proc/{}".format(child)).exists())
 
     def test_terminal_ctrl_c_during_blocked_syscall_keeps_delayed_sigint_suppressed(self):
         with Terminal([SDB, str(self.target), "blocked-read"]) as terminal:
