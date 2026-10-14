@@ -1,0 +1,6 @@
+break main
+cont
+info reg
+si
+cont
+q

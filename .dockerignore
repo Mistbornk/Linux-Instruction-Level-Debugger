@@ -1,0 +1,17 @@
+.git
+.codex
+.agents
+.aws
+.ssh
+.env
+.env.*
+.DS_Store
+build*
+sdb
+*.o
+*.d
+__pycache__
+*.pyc
+core
+core.*
+docs/validation
