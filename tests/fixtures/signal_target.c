@@ -79,6 +79,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     const int threaded = argc == 2 && strcmp(argv[1], "threads") == 0;
+    const int delayed_interrupt = argc == 2 && strcmp(argv[1], "delayed-int") == 0;
+    sigset_t interrupt_mask;
+    sigemptyset(&interrupt_mask);
+    sigaddset(&interrupt_mask, SIGINT);
+    if (delayed_interrupt && sigprocmask(SIG_BLOCK, &interrupt_mask, NULL) == -1)
+        return 11;
     pthread_t threads[2];
     for (int i = 0; i < (threaded ? 2 : 0); ++i)
         if (pthread_create(&threads[i], NULL, worker, NULL))
@@ -86,6 +92,10 @@ int main(int argc, char** argv) {
     printf("SIGNAL_READY=%ld\n", (long)getpid());
     while (!requested && !atomic_load_explicit(&finish, memory_order_relaxed))
         usleep(1000);
+    // The test leaves a terminal SIGINT pending while SDB handles its own copy,
+    // then sets finish. Delivery is forced onto the subsequent debugger cont.
+    if (delayed_interrupt && sigprocmask(SIG_UNBLOCK, &interrupt_mask, NULL) == -1)
+        return 12;
     atomic_store_explicit(&finish, 1, memory_order_relaxed);
     for (int i = 0; i < (threaded ? 2 : 0); ++i)
         if (pthread_join(threads[i], NULL))

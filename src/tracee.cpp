@@ -836,9 +836,14 @@ std::optional<TraceEvent> Tracee::consume_status(pid_t tid, int status) {
         // INTERRUPT stops so a delayed delivery after acknowledgement works.
         // An attached target in another terminal and kill/raise SIGINT remain
         // ordinary application signals.
-        event.kind = EventKind::Interrupted;
         current.delivery_stop = false;
         current.signal = 0;
+        // A terminal copy may arrive only after the user acknowledged Ctrl-C
+        // and resumed. Consume it like a delayed synthetic INTERRUPT stop,
+        // instead of presenting the same interruption a second time.
+        if (signals_ && signals_->pending_signal() == 0)
+            return std::nullopt;
+        event.kind = EventKind::Interrupted;
         return event;
     }
     if (current.exec_return_rip && current.mode == ResumeMode::SingleStep &&
