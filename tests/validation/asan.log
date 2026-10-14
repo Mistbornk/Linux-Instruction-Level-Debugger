@@ -1,0 +1,50 @@
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/breakpoint.cpp -o /tmp/sdb-practice-asan-build/breakpoint.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/command.cpp -o /tmp/sdb-practice-asan-build/command.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/debugger.cpp -o /tmp/sdb-practice-asan-build/debugger.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/disassembler.cpp -o /tmp/sdb-practice-asan-build/disassembler.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/elf_image.cpp -o /tmp/sdb-practice-asan-build/elf_image.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/main.cpp -o /tmp/sdb-practice-asan-build/main.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/memory.cpp -o /tmp/sdb-practice-asan-build/memory.o
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -MMD -MP -c src/tracee.cpp -o /tmp/sdb-practice-asan-build/tracee.o
+cc -nostdlib -no-pie tests/fixtures/loop.S -o /tmp/sdb-practice-asan-build/loop
+chmod +x /tmp/sdb-practice-asan-build/loop
+g++ -fsanitize=address,undefined -no-pie -o /tmp/sdb-practice-asan /tmp/sdb-practice-asan-build/breakpoint.o /tmp/sdb-practice-asan-build/command.o /tmp/sdb-practice-asan-build/debugger.o /tmp/sdb-practice-asan-build/disassembler.o /tmp/sdb-practice-asan-build/elf_image.o /tmp/sdb-practice-asan-build/main.o /tmp/sdb-practice-asan-build/memory.o /tmp/sdb-practice-asan-build/tracee.o -lcapstone
+g++ -Iinclude -std=c++17 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -fsanitize=address,undefined -no-pie -Wl,--wrap=pwrite -o /tmp/sdb-practice-asan-build/memory_transaction tests/memory_transaction.cpp /tmp/sdb-practice-asan-build/breakpoint.o /tmp/sdb-practice-asan-build/command.o /tmp/sdb-practice-asan-build/debugger.o /tmp/sdb-practice-asan-build/disassembler.o /tmp/sdb-practice-asan-build/elf_image.o /tmp/sdb-practice-asan-build/memory.o /tmp/sdb-practice-asan-build/tracee.o -lcapstone
+chmod +x /tmp/sdb-practice-asan
+chmod +x /tmp/sdb-practice-asan-build/memory_transaction
+python3 tests/baseline.py /tmp/sdb-practice-asan
+test_load_continue (__main__.Baseline) ... ok
+test_registers_and_step (__main__.Baseline) ... ok
+test_step_then_continue (__main__.Baseline) ... ok
+test_syscall_entry_and_exit (__main__.Baseline) ... ok
+test_ten_breakpoint_hits (__main__.Baseline) ... ok
+test_two_breakpoints_and_delete (__main__.Baseline) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.997s
+
+OK
+python3 tests/regression.py /tmp/sdb-practice-asan
+test_breakpoint_ids_reset (__main__.Regression) ... ok
+test_disassembly_at_last_executable_byte (__main__.Regression) ... ok
+test_empty_lines_are_ignored (__main__.Regression) ... ok
+test_eof_reaps_child_and_repeated_disassembly_has_no_fd_leak (__main__.Regression) ... ok
+test_exec_replacement_closes_old_session (__main__.Regression) ... ok
+test_external_kill_then_reload (__main__.Regression) ... ok
+test_fatal_signal_and_native_int3 (__main__.Regression) ... ok
+test_invalid_commands_recover (__main__.Regression) ... ok
+test_invalid_elf_and_exec_failure_recover (__main__.Regression) ... ok
+test_invalid_patch_preserves_breakpoint (__main__.Regression) ... ok
+test_patch_over_breakpoint_updates_original (__main__.Regression) ... ok
+test_pie_entry_and_relative_breakpoint (__main__.Regression) ... ok
+test_signal_is_reported_then_forwarded (__main__.Regression) ... ok
+test_single_step_exit_and_reload (__main__.Regression) ... ok
+test_syscall_at_breakpoint_preserves_entry_exit (__main__.Regression) ... ok
+test_zero_original_byte (__main__.Regression) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 5.115s
+
+OK
+/tmp/sdb-practice-asan-build/memory_transaction /tmp/sdb-practice-asan-build/loop
+PASS: insertion failure, partial-write rollback, metadata consistency, rollback failure

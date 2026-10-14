@@ -1,1 +1,9 @@
 .DS_Store
+/sdb
+/sdb.o
+/build/
+*.o
+*.d
+__pycache__/
+/core
+/core.*

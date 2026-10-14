@@ -1,0 +1,25 @@
+test_invalid_commands_recover (__main__.Regression) ... FAIL
+
+======================================================================
+FAIL: test_invalid_commands_recover (__main__.Regression)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/sdb/tests/regression.py", line 65, in test_invalid_commands_recover
+    out = self.run_session(self.targets['loop'], [
+  File "/workspace/sdb/tests/regression.py", line 58, in run_session
+    self.assertEqual(proc.returncode, expected, output)
+AssertionError: -6 != 1 : ** program '/tmp/sdb-practice-tests-xmn0ojw4/loop' loaded. entry point: 0x401000.
+=>       401000: b9 0a 00 00 00                  mov     ecx, 0xa
+         401005: 31 c0                           xor     eax, eax
+         401007: ff c0                           inc     eax
+         401009: ff c9                           dec     ecx
+         40100b: 75 fa                           jne     0x401007
+(sdb) terminate called after throwing an instance of 'std::invalid_argument'
+  what():  stoull
+LOOP=10
+
+
+----------------------------------------------------------------------
+Ran 1 test in 3.455s
+
+FAILED (failures=1)
