@@ -1,15 +1,56 @@
 #include "sdb/command.hpp"
+#include <cctype>
 #include <charconv>
-#include <sstream>
+#include <iterator>
 #include <stdexcept>
+#include <utility>
 namespace sdb {
 Command parse_command(const std::string &line) {
-  std::istringstream input(line);
+  std::vector<std::string> words;
+  std::string word;
+  char quote = 0;
+  bool escaped = false, started = false;
+  for (char c : line) {
+    if (c == '\0')
+      throw std::runtime_error("commands cannot contain NUL bytes");
+    if (escaped) {
+      word += c;
+      escaped = false;
+      started = true;
+    } else if (c == '\\' && quote != '\'') {
+      escaped = true;
+      started = true;
+    } else if (quote) {
+      if (c == quote)
+        quote = 0;
+      else
+        word += c;
+    } else if (c == '\'' || c == '"') {
+      quote = c;
+      started = true;
+    } else if (c == '#' && !started) {
+      break;
+    } else if (std::isspace(static_cast<unsigned char>(c))) {
+      if (started) {
+        words.push_back(std::move(word));
+        word.clear();
+        started = false;
+      }
+    } else {
+      word += c;
+      started = true;
+    }
+  }
+  if (escaped || quote)
+    throw std::runtime_error("unfinished escape or quote");
+  if (started)
+    words.push_back(std::move(word));
   Command command;
-  input >> command.name;
-  std::string arg;
-  while (input >> arg)
-    command.args.push_back(arg);
+  if (!words.empty()) {
+    command.name = std::move(words.front());
+    command.args.assign(std::make_move_iterator(words.begin() + 1),
+                        std::make_move_iterator(words.end()));
+  }
   return command;
 }
 uint64_t number(const std::string &text, int base) {

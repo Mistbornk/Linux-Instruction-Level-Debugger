@@ -47,9 +47,20 @@ void Tracee::registers(const user_regs_struct &regs) {
   require_stopped();
   checked(PTRACE_SETREGS, pid_, nullptr, const_cast<user_regs_struct *>(&regs));
 }
-void Tracee::launch(const std::string &path) {
+void Tracee::launch(const std::vector<std::string> &arguments) {
   if (pid_ > 0)
     throw std::runtime_error("program already loaded");
+  if (arguments.empty() || arguments.front().empty())
+    throw std::runtime_error("load requires an executable path");
+  // Prepare argv before fork so the child does not allocate before exec.
+  std::vector<char *> argv;
+  argv.reserve(arguments.size() + 1);
+  for (const auto &argument : arguments) {
+    if (argument.find('\0') != std::string::npos)
+      throw std::runtime_error("program arguments cannot contain NUL bytes");
+    argv.push_back(const_cast<char *>(argument.c_str()));
+  }
+  argv.push_back(nullptr);
   int pipefd[2];
   if (pipe2(pipefd, O_CLOEXEC) < 0)
     fail("pipe2");
@@ -64,7 +75,7 @@ void Tracee::launch(const std::string &path) {
   if (child == 0) {
     close(pipefd[0]);
     if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) != -1)
-      execl(path.c_str(), path.c_str(), static_cast<char *>(nullptr));
+      execv(argv.front(), argv.data());
     const int error = errno;
     const char *bytes = reinterpret_cast<const char *>(&error);
     size_t sent = 0;
@@ -208,7 +219,8 @@ void Tracee::terminate() noexcept {
     // Never call kill(-1,...). Only the owned, unreaped child is targeted.
     if (kill(pid_, SIGKILL) < 0 && errno != ESRCH) {
       const char message[] = "sdb: failed to kill owned tracee\n";
-      (void)write(STDERR_FILENO, message, sizeof(message) - 1);
+      const auto written = write(STDERR_FILENO, message, sizeof(message) - 1);
+      (void)written;
     }
     int status;
     pid_t result;
@@ -217,7 +229,8 @@ void Tracee::terminate() noexcept {
     } while (result < 0 && errno == EINTR);
     if (result < 0 && errno != ECHILD) {
       const char message[] = "sdb: failed to reap owned tracee\n";
-      (void)write(STDERR_FILENO, message, sizeof(message) - 1);
+      const auto written = write(STDERR_FILENO, message, sizeof(message) - 1);
+      (void)written;
     }
   }
   pid_ = -1;

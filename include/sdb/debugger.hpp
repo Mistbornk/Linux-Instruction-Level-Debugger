@@ -5,8 +5,9 @@
 namespace sdb {
 class Debugger {
 public:
+  // for main() operation
   Debugger() : memory_(tracee_), points_(memory_) {}
-  void load(const std::string &path);
+  void load(const std::vector<std::string> &arguments);
   bool execute(const Command &command);
   void reset() noexcept;
 

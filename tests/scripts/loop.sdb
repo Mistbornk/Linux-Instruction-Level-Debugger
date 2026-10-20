@@ -1,0 +1,6 @@
+# Pass the target on the CLI so this file works with Make and CMake builds:
+# ./sdb --batch tests/scripts/loop.sdb ./build/loop
+info reg
+si
+cont
+q

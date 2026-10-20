@@ -20,13 +20,16 @@ void Debugger::display() const {
     std::cout << "** disassembly unavailable: " << error.what() << '\n';
   }
 }
-void Debugger::load(const std::string &path) {
+void Debugger::load(const std::vector<std::string> &arguments) {
   if (tracee_.pid() > 0)
     throw std::runtime_error("program already loaded");
+  if (arguments.empty() || arguments.front().empty())
+    throw std::runtime_error("load requires an executable path");
+  const auto &path = arguments.front();
   reset();
   ElfImage image(path);
   try {
-    tracee_.launch(path);
+    tracee_.launch(arguments); // fork and launch ptrace child process
     base_ = image.base(memory_);
     const uint64_t entry = image.entry(memory_);
     auto regs = tracee_.registers();
@@ -159,8 +162,7 @@ bool Debugger::execute(const Command &command) {
       return false;
     }
     if (name == "load") {
-      arity(1);
-      load(args[0]);
+      load(args);
       return true;
     }
     if (name == "si" || name == "cont" || name == "syscall") {

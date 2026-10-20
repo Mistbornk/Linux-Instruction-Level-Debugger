@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/user.h>
 
@@ -32,7 +33,7 @@ public:
   Tracee() = default;
   Tracee(const Tracee &) = delete;
   Tracee &operator=(const Tracee &) = delete;
-  void launch(const std::string &path);
+  void launch(const std::vector<std::string> &arguments);
   Event resume(Resume mode, int signal = 0);
   void terminate() noexcept;
   std::optional<Event> poll_exit();

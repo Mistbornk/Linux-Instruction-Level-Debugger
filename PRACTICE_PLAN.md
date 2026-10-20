@@ -3,6 +3,9 @@
 目標：從你熟悉的單檔 debugger，逐步練習到 `dev-reference` 的模組化版本。
 每階段只處理一組責任，先理解現有程式，再修改、測試、提交。
 
+目前工作樹已實作第一、二階段；下方第一階段紀錄保留為歷史，第二階段的
+介面、建置與驗收方式見「第二階段：可重播的開發流程」。
+
 ## 分支與本次範圍
 
 | 分支 | 用途 |
@@ -183,7 +186,7 @@ Syscall 顯示實際停止 RIP，不再對所有停止一律減二。
 - `break` 仍是十六進位地址；不提供 symbol lookup。
 - 可以在 executable mapping 中設定地址斷點，但不宣稱自動辨認 x86 原始指令邊界。
 - 拒絕把原生 INT3 註冊為 SDB software breakpoint，也拒絕將既有斷點的 original byte patch 成 INT3。
-- 現階段 parser 仍按空白分隔，不支援帶空白路徑、引號、目標 argv 或 shell expansion。
+- 第一階段完成時 parser 僅按空白分隔；第二階段已加入引號、空白路徑與目標 argv，仍不提供 shell expansion。
 
 ## 如何讀這次修改
 
@@ -211,6 +214,113 @@ Syscall 顯示實際停止 RIP，不再對所有停止一律減二。
 
 ## 建置與驗收
 
+### 第二階段：可重播的開發流程
+
+已將命令輸入整理為 `include/sdb/command_input.hpp` 和
+`src/command_input.cpp`。`main.cpp` 負責選擇輸入模式、prompt、錯誤顯示與
+退出碼；`CommandInput` 只負責開檔、逐行讀取與關閉自己擁有的檔案；
+`CliOptions` 負責啟動選項；指令解析與執行分別交給 `parse_command` 和
+`Debugger`；`Tracee::launch` 接收完整 argv，於 fork 前準備指標陣列並使用
+`execv` 執行，目標路徑不搜尋 PATH。
+
+```sh
+./sdb                         # 從 stdin 讀指令，保留既有 prompt 行為
+./sdb ./build/loop             # 先載入程式，再從 stdin 讀指令
+./sdb --batch commands.txt     # 從檔案讀指令，不顯示 prompt
+./sdb --batch -                # 從 stdin 讀指令，不顯示 prompt
+./sdb --command-file commands.txt -- ./program "two words" ""
+./sdb --help
+```
+
+啟動選項必須放在目標路徑之前，目標路徑之後全部作為目標參數傳遞；
+`--` 可結束 debugger 選項解析。`--batch` 和 `--command-file` 為別名，
+同一次啟動只接受一份命令檔。命令檔可自行使用 `load <path> [args...]`
+載入程式，也可在 CLI 上指定初始目標。
+
+指令 parser 對照 reference 支援單／雙引號、空字串參數、相鄰片段合併、
+單引號以外的反斜線跳脫，以及 token 邊界的 `#` 註解。沒有環境變數、萬用
+字元或命令替換；反斜線接 `n` 只產生字母 `n`，沒有跨行接續或 shell 執行。
+例如命令檔可以寫：
+
+```text
+# 在倉庫根目錄，先執行 make build/loop
+load "./build/loop" "two words" ''
+info reg
+si
+cont
+q
+```
+
+`tests/scripts/loop.sdb` 是可直接重播的範例：
+
+```sh
+make -j2 build/loop
+./sdb --batch tests/scripts/loop.sdb ./build/loop
+```
+
+檔案開啟／讀取失敗會結束並回傳 1；一般指令及 parser 錯誤會顯示
+`命令檔:行號`，繼續讀取後續指令，最後回傳 1。這與 reference 的繼續執行
+策略一致，並增加檔案位置資訊。`q` 或 EOF 結束，沿用 `Tracee` ownership
+清理目標；目標自身的退出碼仍由停止事件顯示，不等同 SDB 退出碼。
+
+對照 `dev-reference:src/main.cpp` 的 `CommandInput`，目前保留 FD ownership、
+禁止複製、`O_CLOEXEC`、`EINTR` 重試、無結尾換行的最後一行，以及逐字讀取。
+逐字讀取可避免 debugger 預讀目標程式需要的 stdin。訊號通知管道、`poll`
+與 `Interrupted` 結果留到第五階段整合；目前不宣稱已有受控 Ctrl-C 支援。
+為相容第一階段既有的 pipe-driven clients，未指定命令檔時保留 prompt；
+自動以 TTY 判斷互動模式，將與第五階段的訊號／終端控制一起整理。
+
+`tests/regression.py` 新增命令檔、EOF、讀取錯誤、錯誤後繼續，以及與目標
+共用 stdin 時不預讀的回歸測試；`tests/fixtures/input.c` 為共用 stdin 測試目標。
+`tests/command_test.cpp` 檢查 parser 和啟動選項；`tests/stage2.py` 檢查完整
+argv 傳遞、相同檔案重播、錯誤恢復、空白路徑及 shell 表達式維持字面值。
+其中也直接重播倉庫內的 `tests/scripts/loop.sdb`，確保本機與 CI 使用同一份範例。
+
+### CMake、CTest 與 CI
+
+`CMakeLists.txt` 將程式分為 `sdb_core` 與 `sdb`，沿用 reference 的核心函式庫
+架構。只支援 Linux x86-64，依賴 C/C++ 編譯器、Capstone、Python 3、gcc 和 nm。
+例如 Ubuntu 可安裝 `build-essential cmake libcapstone-dev python3`。
+
+```sh
+cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug -j2
+ctest --test-dir build/debug --output-on-failure
+```
+
+本機與 GitHub Actions 使用同一個入口，可重播三種設定：
+
+```sh
+bash scripts/ci.sh --build-type Debug --sanitizers OFF
+bash scripts/ci.sh --build-type Release --sanitizers OFF
+bash scripts/ci.sh --build-type Debug --sanitizers ON
+```
+
+每個設定都執行 parser／CLI 單元測試、測試 runner 的錯誤與 skip 策略、
+baseline、regression、第二階段整合測試及實際 pwrite 故障注入。
+sanitizer 模式啟用 ASan、UBSan 與 leak detection，目標 fixtures 不插入 sanitizer。
+
+`tests/ptrace_probe.cpp` 專門確認核心允許 `PTRACE_TRACEME`。僅已知權限／能力
+不足回傳 77，CTest 明確列為 skipped；其他 probe 錯誤和測試失敗不會被轉成
+skip。設定 `SDB_REQUIRE_PTRACE=1` 時，能力不足也必須失敗。Make 的 `test`
+目標同樣顯示 skip 原因，但因 make 不支援 CTest 的 skip 狀態而回傳非零。
+
+`.github/workflows/ci.yml` 在 Ubuntu x86-64 執行 Debug、Release、Debug +
+sanitizers，並強制 `SDB_REQUIRE_PTRACE=1`。`scripts/ci.sh` 為各設定保存
+`configure.log`、`build.log`、`test.log`、JUnit `results.xml` 與 `summary.txt`，
+CI 無論成功失敗都上傳這些紀錄。配置或編譯失敗也保留當時的 log 和退出碼。
+
+可用 `SDB_BUILD_ROOT=/tmp/sdb-ci` 把產物放進容器本地磁碟，
+`SDB_BUILD_JOBS` 控制並行編譯數。GitHub workflow 已配置；遠端執行結果需在
+push／pull request 後由 GitHub Actions 確認，不以本機測試冒充遠端驗證。
+
+第二階段已於既有 Colima Linux x86-64 容器實測：Debug、Release、Debug +
+ASan／UBSan 各六組 CTest suites 全數通過，零失敗、零跳過、無編譯警告；
+保留的 `make test` 也通過 parser／CLI、三個 runner 測試、六個 baseline、
+二十五個 regression、十個第二階段整合測試及 pwrite 故障注入。
+
+### 執行驗收
+
 Mac 上先進入原有環境：
 
 ```sh
@@ -231,8 +341,9 @@ make test
 make -j2 BUILD_DIR=/tmp/sdb-practice-build TARGET=/tmp/sdb-practice test
 ```
 
-`make test` 包含六個 baseline 方法、十六個 regression 方法，以及一個實際 pwrite 故障注入 binary。
-這些測試以 stdin 餵原本的指令迴圈，不需要先新增 batch 功能。
+`make test` 包含 parser／CLI、runner、baseline、regression、第二階段整合測試
+及實際 pwrite 故障注入 binary。
+原有測試透過 stdin 驅動指令迴圈；新增測試也覆蓋命令檔輸入。
 
 Sanitizer 驗收命令：
 

@@ -37,14 +37,19 @@ class Regression(unittest.TestCase):
             subprocess.run(['gcc', '-O0', '-g', '-fPIE', '-pie', '-DMODE=' + str(mode),
                             str(FIXTURES / 'behavior.c'), '-o', str(target)], check=True)
             cls.targets['behavior' + str(mode)] = target
+        target = cls.root / 'input'
+        subprocess.run(['gcc', '-O0', '-g', str(FIXTURES / 'input.c'),
+                        '-o', str(target)], check=True)
+        cls.targets['input'] = target
         cls.sym = {name: symbols(path) for name, path in cls.targets.items()}
 
     @classmethod
     def tearDownClass(cls):
         cls.temp.cleanup()
 
-    def run_session(self, target, commands, expected=0):
-        argv = [SDB] + ([str(target)] if target else [])
+    def run_session(self, target, commands, expected=0, *, command_file=None):
+        argv = ([SDB, '--batch', str(command_file)] if command_file is not None
+                else [SDB] + ([str(target)] if target else []))
         proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, text=True, start_new_session=True)
         try:
@@ -72,6 +77,63 @@ class Regression(unittest.TestCase):
     def test_empty_lines_are_ignored(self):
         out = self.run_session(None, ['', '   ', 'info break', 'q'])
         self.assertNotIn('error', out)
+
+    def test_batch_load_continue_and_final_line_without_newline(self):
+        path = self.root / 'commands with spaces.txt'
+        path.write_text('load ' + str(self.targets['loop']) + '\n\ncont')
+        out = self.run_session(None, [], command_file=path)
+        self.assertIn('LOOP=10', out)
+        self.assertIn('exit status 0', out)
+        self.assertNotIn('(sdb)', out)
+
+    def test_batch_quit_does_not_execute_following_commands(self):
+        path = self.root / 'quit.txt'
+        path.write_text('q\nunknown-command\n')
+        out = self.run_session(None, [], command_file=path)
+        self.assertNotIn('error', out)
+
+    def test_batch_command_errors_continue_but_set_exit_status(self):
+        path = self.root / 'invalid.txt'
+        path.write_text('unknown-command\ninfo break\n')
+        out = self.run_session(None, [], 1, command_file=path)
+        self.assertIn('unknown command', out)
+        self.assertIn('no breakpoints', out)
+
+    def test_batch_dash_reads_stdin_without_prompt(self):
+        out = self.run_session(None, ['info break', 'q'], command_file='-')
+        self.assertIn('no breakpoints', out)
+        self.assertNotIn('(sdb)', out)
+
+    def test_batch_missing_file_and_read_errors(self):
+        for path, message in [(self.root / 'missing.txt', 'cannot open command file'),
+                              (self.root, 'read command input')]:
+            with self.subTest(path=path):
+                out = self.run_session(None, [], 1, command_file=path)
+                self.assertIn(message, out)
+
+    def test_batch_empty_file(self):
+        path = self.root / 'empty.txt'
+        path.write_text('')
+        out = self.run_session(None, [], command_file=path)
+        self.assertEqual(out, '')
+
+    def test_batch_empty_path_is_rejected(self):
+        out = self.run_session(None, [], 1, command_file='')
+        self.assertIn('empty command file path', out)
+
+    def test_command_input_does_not_prefetch_target_stdin(self):
+        out = self.run_session(self.targets['input'], ['cont', 'hello', 'q'])
+        self.assertIn('INPUT=hello', out)
+        self.assertIn('exit status 0', out)
+        self.assertNotIn('error', out)
+
+    def test_batch_file_leaves_stdin_for_target(self):
+        path = self.root / 'target-input.txt'
+        path.write_text('load ' + str(self.targets['input']) + '\ncont\nq\n')
+        out = self.run_session(None, ['hello'], command_file=path)
+        self.assertIn('INPUT=hello', out)
+        self.assertIn('exit status 0', out)
+        self.assertNotIn('(sdb)', out)
 
     def test_zero_original_byte(self):
         site = self.addr('patch', 'zero_site')

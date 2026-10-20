@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   try {
     sdb::Tracee tracee;
     sdb::ElfImage image(argv[1]);
-    tracee.launch(argv[1]);
+    tracee.launch({argv[1]});
     sdb::Memory memory(tracee);
     sdb::BreakpointManager points(memory);
     auto site = image.entry(memory);
