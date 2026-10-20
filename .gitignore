@@ -1,4 +1,6 @@
 *.DS_Store
+/PRACTICE_PLAN.md
+/start-dev.sh
 /sdb
 /sdb.o
 /build/
